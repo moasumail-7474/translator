@@ -85,6 +85,17 @@
   /* 상대방이 읽는 쪽은 글자를 크게 */
   #app.mode-ko .vn .bubble .main { font-size: 26px; }
 
+  /* 입력창이 숨겨진 쪽에서 "내가 칠 차례" 로 넘겨받는 띠 */
+  .takeover {
+    display: none; flex-shrink: 0; text-align: center;
+    padding: 13px 12px; font-size: 14px; font-weight: 600;
+    color: #8fa4bd; background: rgba(255,255,255,.04);
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .takeover:active { background: rgba(255,255,255,.11); }
+  #app.mode-vi .ko .takeover { display: block; }
+  #app.mode-ko .vn .takeover { display: block; }
+
   /* ── 앱 안에 내장한 베트남어 자판 ── */
   .vkbd {
     flex-shrink: 0; display: none; padding: 5px 4px 8px;
@@ -153,6 +164,7 @@
              enterkeyhint="send" inputmode="none" autocapitalize="off" spellcheck="false">
       <button id="vnSend">Gửi</button>
     </div>
+    <div class="takeover" id="vnTakeover">✍️ Chạm vào đây để nhập tiếng Việt</div>
     <div class="vkbd" id="vkbd"></div>
   </div>
 
@@ -171,6 +183,7 @@
       <input id="koInput" type="text" placeholder="한국어로 입력..." autocomplete="off" enterkeyhint="send">
       <button id="koSend">전송</button>
     </div>
+    <div class="takeover" id="koTakeover">✍️ 여기를 눌러 한국어로 입력</div>
     <div class="label">한국어</div>
   </div>
 </div>
@@ -439,6 +452,21 @@ function setMode(from) {
   clearTimeout(blurTimer);
   appEl.classList.remove("mode-ko", "mode-vi");
   if (from) appEl.classList.add(from === "ko" ? "mode-ko" : "mode-vi");
+
+  // 입력하는 사람이 바뀌면 이전 사람의 미리보기는 지운다
+  if (preview && preview.from !== from) {
+    preview = null;
+    cancelPreview();
+    render();
+  }
+}
+
+// 입력창이 숨겨진 쪽에서 "내가 칠 차례"로 넘겨받기
+function takeOver(from) {
+  clearTimeout(blurTimer);
+  const input = document.getElementById(from === "ko" ? "koInput" : "vnInput");
+  setMode(from);
+  input.focus();
 }
 
 function cancelPreview() {
@@ -693,6 +721,15 @@ function mkKey(label, cls, onTap) {
     onTap();
   });
   return b;
+}
+
+/* ---------- 넘겨받기 띠 ---------- */
+for (const from of ["ko", "vi"]) {
+  const el = document.getElementById(from === "ko" ? "koTakeover" : "vnTakeover");
+  el.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    takeOver(from);
+  });
 }
 
 /* ---------- 이벤트 연결 ---------- */
