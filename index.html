@@ -140,6 +140,12 @@
     border-bottom: 1px solid #2a2f3a; color: #e8e8f0; font-weight: 700;
   }
   #phrases header button { background: #232838; color: #9aa4b8; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; }
+  #phraseSearchBar { padding: 10px 12px 4px; }
+  #phraseSearch {
+    width: 100%; font-size: 16px; padding: 11px 13px; border-radius: 11px;
+    border: 1px solid #333a4a; background: #0d1017; color: #fff; outline: none;
+  }
+  #phraseSearch:focus { border-color: #4a7fd4; }
   #phraseList { flex: 1; overflow-y: auto; padding: 10px 12px; }
   .phrase {
     background: #1a1e28; border: 1px solid #262c38; border-radius: 12px;
@@ -190,48 +196,169 @@
 
 <div id="phrases">
   <header>
-    <span>📖 나트랑 여행 문장</span>
+    <span>📖 여행 문장집</span>
     <button id="phraseClose">닫기</button>
   </header>
+  <div id="phraseSearchBar">
+    <input id="phraseSearch" type="search" placeholder="🔍 찾기 (예: 얼마, 택시, 아파요)" autocomplete="off">
+  </div>
   <div id="phraseList"></div>
 </div>
 
 <script>
 "use strict";
 
-/* ---------- 여행 문장집 (오프라인에서도 동작) ---------- */
+/* ---------- 여행 문장집 (인터넷 없어도 동작) ----------
+   [분류, 방향, [[한국어, 베트남어], ...]]
+   방향 "ko" = 내가 하는 말 / "vi" = 상대가 나에게 하는 말        */
 const PHRASEBOOK = [
-  ["인사", [
+  ["🙏 기본 인사", "ko", [
     ["안녕하세요", "Xin chào"],
     ["감사합니다", "Cảm ơn"],
+    ["정말 감사합니다", "Cảm ơn nhiều"],
     ["죄송합니다", "Xin lỗi"],
+    ["괜찮아요", "Không sao"],
+    ["네", "Vâng"],
+    ["아니요", "Không"],
     ["안녕히 계세요", "Tạm biệt"],
+    ["저는 한국 사람이에요", "Tôi là người Hàn Quốc"],
+    ["베트남어 못해요", "Tôi không biết tiếng Việt"],
+    ["영어 하실 수 있어요?", "Bạn nói tiếng Anh được không?"],
+    ["잠깐만요", "Đợi một chút"],
+    ["이해했어요", "Tôi hiểu rồi"],
+    ["이해가 안 돼요", "Tôi không hiểu"],
+    ["천천히 말해 주세요", "Nói chậm lại giúp tôi"],
   ]],
-  ["흥정 · 쇼핑", [
+  ["💰 돈 · 숫자", "ko", [
     ["얼마예요?", "Bao nhiêu tiền?"],
-    ["너무 비싸요", "Đắt quá"],
-    ["깎아 주세요", "Giảm giá cho tôi"],
-    ["이거 주세요", "Cho tôi cái này"],
+    ["1만 동", "mười nghìn đồng"],
+    ["5만 동", "năm mươi nghìn đồng"],
+    ["10만 동", "một trăm nghìn đồng"],
+    ["50만 동", "năm trăm nghìn đồng"],
+    ["100만 동", "một triệu đồng"],
     ["카드 되나요?", "Có nhận thẻ không?"],
+    ["현금으로 낼게요", "Tôi trả tiền mặt"],
+    ["달러 받으세요?", "Có nhận đô la không?"],
+    ["거스름돈 주세요", "Cho tôi tiền thừa"],
+    ["영수증 주세요", "Cho tôi hóa đơn"],
+    ["계산이 틀린 것 같아요", "Hình như tính sai rồi"],
   ]],
-  ["식당", [
+  ["🛍️ 흥정 · 쇼핑", "ko", [
+    ["너무 비싸요", "Đắt quá"],
+    ["깎아 주세요", "Giảm giá đi"],
+    ["조금만 더 깎아 주세요", "Giảm thêm chút nữa đi"],
+    ["이거 주세요", "Cho tôi cái này"],
+    ["저거 보여 주세요", "Cho tôi xem cái kia"],
+    ["그냥 구경만 할게요", "Tôi chỉ xem thôi"],
+    ["다른 색 있어요?", "Có màu khác không?"],
+    ["더 큰 거 있어요?", "Có cỡ lớn hơn không?"],
+    ["두 개 살게요", "Tôi mua hai cái"],
+    ["봉투 주세요", "Cho tôi cái túi"],
+    ["안 살게요", "Tôi không mua"],
+  ]],
+  ["🍜 식당 · 음식", "ko", [
     ["메뉴 주세요", "Cho tôi thực đơn"],
+    ["이걸로 주세요", "Cho tôi món này"],
+    ["물 주세요", "Cho tôi nước"],
     ["맵지 않게 해주세요", "Đừng cay nhé"],
     ["고수 빼주세요", "Không cho rau mùi"],
-    ["계산해 주세요", "Tính tiền"],
+    ["얼음 빼주세요", "Không cho đá"],
+    ["저는 채식이에요", "Tôi ăn chay"],
+    ["돼지고기예요?", "Đây là thịt heo à?"],
+    ["소고기 쌀국수 하나", "Một tô phở bò"],
+    ["맥주 한 병 주세요", "Cho tôi một chai bia"],
+    ["커피 한 잔 주세요", "Cho tôi một ly cà phê"],
+    ["조금만 주세요", "Cho tôi ít thôi"],
     ["맛있어요", "Ngon quá"],
+    ["포장해 주세요", "Cho tôi mang về"],
+    ["계산해 주세요", "Tính tiền"],
+    ["화장실 어디예요?", "Nhà vệ sinh ở đâu?"],
   ]],
-  ["이동", [
+  ["🚕 택시 · 이동", "ko", [
     ["여기로 가주세요", "Cho tôi đến đây"],
     ["공항까지 얼마예요?", "Đến sân bay bao nhiêu tiền?"],
-    ["미터기 켜주세요", "Bật đồng hồ đi"],
-    ["여기서 세워주세요", "Dừng ở đây"],
+    ["미터기 켜 주세요", "Bật đồng hồ đi"],
+    ["여기서 세워 주세요", "Dừng ở đây"],
+    ["조금만 더 가주세요", "Đi thêm một chút nữa"],
+    ["천천히 가주세요", "Đi chậm thôi"],
+    ["얼마나 걸려요?", "Mất bao lâu?"],
+    ["여기가 어디예요?", "Đây là đâu?"],
+    ["걸어갈 수 있어요?", "Đi bộ được không?"],
+    ["에어컨 켜 주세요", "Bật máy lạnh giúp tôi"],
+    ["짐 좀 실어 주세요", "Giúp tôi để hành lý"],
   ]],
-  ["긴급", [
-    ["도와주세요", "Giúp tôi với"],
+  ["🏨 호텔", "ko", [
+    ["체크인할게요", "Tôi muốn nhận phòng"],
+    ["체크아웃할게요", "Tôi muốn trả phòng"],
+    ["예약했어요", "Tôi đã đặt phòng"],
+    ["와이파이 비밀번호가 뭐예요?", "Mật khẩu wifi là gì?"],
+    ["에어컨이 안 돼요", "Máy lạnh không chạy"],
+    ["뜨거운 물이 안 나와요", "Không có nước nóng"],
+    ["수건 더 주세요", "Cho tôi thêm khăn"],
+    ["방 청소해 주세요", "Dọn phòng giúp tôi"],
+    ["짐 맡길 수 있어요?", "Gửi hành lý được không?"],
+    ["방을 바꾸고 싶어요", "Tôi muốn đổi phòng"],
+    ["아침 식사 몇 시예요?", "Ăn sáng mấy giờ?"],
+  ]],
+  ["🏖️ 관광 · 해변", "ko", [
+    ["사진 찍어 주세요", "Chụp ảnh giúp tôi"],
+    ["같이 사진 찍어도 돼요?", "Chụp ảnh chung được không?"],
+    ["입장료 얼마예요?", "Vé vào bao nhiêu tiền?"],
+    ["몇 시에 문 열어요?", "Mấy giờ mở cửa?"],
+    ["몇 시에 문 닫아요?", "Mấy giờ đóng cửa?"],
+    ["여기서 수영해도 돼요?", "Bơi ở đây được không?"],
+    ["파라솔 빌리고 싶어요", "Tôi muốn thuê dù che nắng"],
+    ["구명조끼 있어요?", "Có áo phao không?"],
+    ["정말 아름다워요", "Đẹp quá"],
+  ]],
+  ["💆 마사지 · 스파", "ko", [
+    ["마사지 얼마예요?", "Massage bao nhiêu tiền?"],
+    ["한 시간에 얼마예요?", "Một tiếng bao nhiêu tiền?"],
+    ["더 세게 해주세요", "Mạnh tay hơn một chút"],
+    ["살살 해주세요", "Nhẹ tay thôi"],
+    ["딱 좋아요", "Vậy là được rồi"],
+    ["아파요", "Đau"],
+    ["어깨를 해주세요", "Làm vai giúp tôi"],
+    ["등을 해주세요", "Làm lưng giúp tôi"],
+    ["다리를 해주세요", "Làm chân giúp tôi"],
+  ]],
+  ["💊 아플 때 · 약국", "ko", [
+    ["배가 아파요", "Tôi đau bụng"],
+    ["머리가 아파요", "Tôi đau đầu"],
+    ["열이 나요", "Tôi bị sốt"],
+    ["설사해요", "Tôi bị tiêu chảy"],
+    ["토했어요", "Tôi bị nôn"],
+    ["약 주세요", "Cho tôi thuốc"],
+    ["해열제 주세요", "Cho tôi thuốc hạ sốt"],
+    ["소화제 주세요", "Cho tôi thuốc tiêu hóa"],
+    ["모기에 물렸어요", "Tôi bị muỗi đốt"],
+    ["약국이 어디예요?", "Nhà thuốc ở đâu?"],
     ["병원이 어디예요?", "Bệnh viện ở đâu?"],
-    ["경찰을 불러주세요", "Gọi cảnh sát giúp tôi"],
-    ["몸이 아파요", "Tôi bị đau"],
+  ]],
+  ["🚨 긴급", "ko", [
+    ["도와주세요!", "Giúp tôi với!"],
+    ["경찰을 불러 주세요", "Gọi cảnh sát giúp tôi"],
+    ["구급차를 불러 주세요", "Gọi xe cứu thương giúp tôi"],
+    ["지갑을 잃어버렸어요", "Tôi mất ví"],
+    ["여권을 잃어버렸어요", "Tôi mất hộ chiếu"],
+    ["휴대폰을 잃어버렸어요", "Tôi mất điện thoại"],
+    ["길을 잃었어요", "Tôi bị lạc đường"],
+    ["전화 좀 빌려주세요", "Cho tôi mượn điện thoại"],
+    ["한국 대사관", "Đại sứ quán Hàn Quốc"],
+  ]],
+  ["👂 상대가 하는 말 (알아듣기)", "vi", [
+    ["몇 분이세요?", "Bao nhiêu người?"],
+    ["뭐 드릴까요?", "Anh muốn gì?"],
+    ["다 팔렸어요 / 없어요", "Hết rồi"],
+    ["없어요", "Không có"],
+    ["잠깐 기다리세요", "Đợi một chút"],
+    ["엄청 싸요!", "Rẻ lắm!"],
+    ["사세요!", "Mua đi!"],
+    ["몇 개요?", "Bao nhiêu cái?"],
+    ["현금이요, 카드요?", "Tiền mặt hay thẻ?"],
+    ["여기 있습니다", "Của anh đây"],
+    ["안 됩니다", "Không được"],
+    ["어디 가세요?", "Anh đi đâu?"],
   ]],
 ];
 
@@ -418,27 +545,49 @@ function load() {
 }
 
 /* ---------- 문장집 ---------- */
-function buildPhrases() {
+function buildPhrases(filter) {
   const list = document.getElementById("phraseList");
-  for (const [cat, items] of PHRASEBOOK) {
+  const q = (filter || "").trim().toLowerCase();
+  list.innerHTML = "";
+  let shown = 0;
+
+  for (const [cat, dir, items] of PHRASEBOOK) {
+    const hits = q
+      ? items.filter(([ko, vi]) => ko.toLowerCase().includes(q) || vi.toLowerCase().includes(q))
+      : items;
+    if (hits.length === 0) continue;
+
     const h = document.createElement("div");
     h.className = "cat";
     h.textContent = cat;
     list.appendChild(h);
 
-    for (const [ko, vi] of items) {
+    for (const [ko, vi] of hits) {
+      shown++;
       const p = document.createElement("div");
       p.className = "phrase";
-      p.innerHTML = `<div class="ko-t">${ko}</div><div class="vi-t">${vi}</div>`;
+      // 상대가 하는 말은 베트남어를 크게 (알아듣는 용도라서)
+      if (dir === "vi") {
+        p.innerHTML = `<div class="ko-t">${vi}</div><div class="vi-t">${ko}</div>`;
+      } else {
+        p.innerHTML = `<div class="ko-t">${ko}</div><div class="vi-t">${vi}</div>`;
+      }
       p.onclick = () => {
-        history.push({ from: "ko", ko, vi });
+        history.push({ from: dir, ko, vi });
         render();
         save();
-        speak(vi, "vi-VN");
+        speak(dir === "vi" ? ko : vi, dir === "vi" ? "ko-KR" : "vi-VN");
         document.getElementById("phrases").classList.remove("open");
       };
       list.appendChild(p);
     }
+  }
+
+  if (shown === 0) {
+    const e = document.createElement("div");
+    e.className = "cat";
+    e.textContent = "찾는 문장이 없어요";
+    list.appendChild(e);
   }
 }
 
@@ -744,6 +893,9 @@ document.getElementById("flipBtn").onclick = () => {
 document.getElementById("phraseBtn").onclick = () => {
   document.getElementById("phrases").classList.add("open");
 };
+document.getElementById("phraseSearch").addEventListener("input", e => {
+  buildPhrases(e.target.value);
+});
 document.getElementById("phraseClose").onclick = () => {
   document.getElementById("phrases").classList.remove("open");
 };
