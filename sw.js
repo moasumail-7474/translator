@@ -1,7 +1,7 @@
 // 인터넷이 없어도 앱 화면이 열리도록 저장해두는 역할.
 // 번역 자체는 인터넷이 필요하지만, 앱과 여행 문장집은 오프라인에서도 동작한다.
 
-const CACHE = "translator-v4";
+const CACHE = "translator-v5";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
